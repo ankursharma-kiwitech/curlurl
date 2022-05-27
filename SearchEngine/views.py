@@ -1,28 +1,43 @@
+# from SearchEngine.search import google
+import pycurl
 from django.shortcuts import render, redirect
-from SearchEngine.search import google,yahoo,duck,ecosia, bing, givewater
+
+from io import BytesIO
+
+
+def foo():
+    """simple doc"""
 
 
 def homepage(request):
-    return render(request,'home.html')
+    return render(request, 'home.html')
 
 
 def results(request):
     if request.method == "POST":
-        result = request.POST.get('search')
-        google_link,google_text = google(result)
-        google_data = zip(google_link,google_text)
-        yahoo_link,yahoo_text = yahoo(result)
-        yahoo_data = zip(yahoo_link,yahoo_text)
-        duck_link,duck_text = duck(result)
-        duck_data = zip(duck_link,duck_text)
-        ecosia_link,ecosia_text = ecosia(result)
-        ecosia_data = zip(ecosia_link,ecosia_text)
-        bing_link,bing_text = bing(result)
-        bing_data = zip(bing_link,bing_text)
-        givewater_link,givewater_text = givewater(result)
-        givewater_data = zip(givewater_link,givewater_text)
+        search = request.POST['search']
+        print(search)
 
-        if result == '':
-            return redirect('Home')
-        else:
-            return render(request,'results.html',{'google': google_data, 'yahoo': yahoo_data, 'duck': duck_data, 'ecosia': ecosia_data,'bing': bing_data, 'givewater': givewater_data})
+        b_obj = BytesIO()
+        crl = pycurl.Curl()
+
+        # Set URL value
+        crl.setopt(crl.URL, 'search')
+
+        # Write bytes that are utf-8 encoded
+        crl.setopt(crl.WRITEDATA, b_obj)
+
+        # Perform a file transfer
+        crl.perform()
+
+        # End curl session
+        crl.close()
+
+        # Get the content stored in the BytesIO object (in byte characters)
+        get_body = b_obj.getvalue()
+
+        # Decode the bytes stored in get_body to HTML and print the result
+        print('Output of GET request:\n%s' % get_body.decode('utf8'))
+
+    else:
+        return redirect('/')
